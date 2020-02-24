@@ -1,11 +1,13 @@
-% Tomography test
+% Tomography test with minimum total-variation norm
 %
 % 2D Tomgoraphy example
-%   min_{x} \| A*x - b \|^2 subject to x \in \{-1, 1\}^n
+%   min_{x} |D*x|_1 subject to 0.5*|A*x - b|^2 <= sigma, x \in {-1, 1}^n
 %   
 % b - projected data
 % A - tomography matrix
 % x - (binary) image
+% D - finite difference matrix for 2D image gradient
+% sigma - noise level
 %
 % Created by:
 %   - Ajinkya Kadu, Utrecht University
@@ -26,7 +28,7 @@ I  = imread([pwd '/images/bat.png']);
 I  = double(I);             % convert image to double
 I  = I/max(I(:));           % rescale
 
-k  = 8*2;                     % sampling
+k  = 16;                     % sampling
 I  = I(1:k:end,1:k:end);    
 
 % convert image to pixel values of -1 and 1
@@ -39,14 +41,14 @@ u           = unique(xt(:));        % unique greylevels
 
 
 % generate a tomography matrix
-theta   = round(linspace(0,150,10));% angles (in degrees)
+theta   = round(linspace(0,150,3)); % angles (in degrees)
 A       = fancurvedtomo(n,theta);   % fan-beam geometry
 A       = A/normest(A);             % rescale matrix
 
 bt      = A*xt(:);                  % generate (true) data                
 
 % add noise to data (additive white Gaussian noise)
-noiseLevel = 0.01;
+noiseLevel = 0.0;
 noiseB     = randn(size(bt));
 noiseB     = noiseLevel*(noiseB/norm(noiseB)*norm(bt));
 b          = bt + noiseB;
@@ -64,6 +66,9 @@ fprintf(['The noise is ' num2str(sigma) '\n']);
 D      = finiteDiff(n);
 D      = D/normest(D);
 
+trueTV = norm(D*xt(:),1);
+fprintf('true total-variation = %.4f \n',trueTV);
+
 %% TV solution
 % solve:
 %   min_{x} |b - A*x|_2^2 + lambda * |D*x|_1
@@ -74,8 +79,8 @@ D      = D/normest(D);
 fprintf('---------- TV min solution -------------- \n');
 
 options.maxIter = 1e6;
-options.ABSTOL  = 1e-6;
-options.RELTOL  = 1e-6;
+options.optTol  = 1e-6;
+options.progTol = 1e-6;
 options.saveHist= 0;
 
 [xTV,histTV] = solveTVmin(A,b,D,sigma,options);
@@ -87,11 +92,13 @@ xTVt(xTV>0) = 1;
 xTVt        = reshape(xTVt,n,n);
 
 % performance measures
-misfitP  = norm(A*xTVt(:)-b);
+misfitP  = 0.5*norm(A*xTVt(:)-b)^2;
+tvP      = norm(D*xTVt(:),1);
 jacIdP   = nnz(xTVt(:)==xt(:))/nnz(xt(:));
 incIdP   = nnz(min(xTVt(:).*xt(:),0));
 
 fprintf('misfit           = %.4f \n',misfitP);
+fprintf('total-variation  = %.4f \n',tvP);
 fprintf('jaccard index    = %.4f \n',jacIdP);
 fprintf('Incorrect pixels = %d \n',incIdP);
 
@@ -106,25 +113,27 @@ fprintf('Incorrect pixels = %d \n',incIdP);
 fprintf('--------- Dual-TV min solution ---------- \n')
 
 options.maxIter = 1e6; 
-options.optTol  = 1e-8; 
-options.progTol = 1e-8; 
+options.optTol  = 1e-6; 
+options.progTol = 1e-6; 
 options.savehist= 0;    
 
 [xD,hist]     = solveTVminBT(A,b,D,sigma,options);
 
 % threshold
 xDt = xD;
-xDt(abs(xD) < 0.5) = 0;  
+xDt(abs(xD) < 0.99) = 0;  
 xDt = sign(xDt);           
 xDt = reshape(xDt,n,n);
 
 % performance measures
-misfitD = norm(A*xDt(:)-b);
+misfitD = 0.5*norm(A*xDt(:)-b)^2;
+tvD     = norm(D*xDt(:),1);
 jacIdD  = nnz(xDt(:)==xt(:))/nnz(xt(:));
 incIdD  = nnz(min(xDt(:).*xt(:),0));
 undetD  = nnz(xDt(:)==0);
 
 fprintf('misfit              = %.4f \n',misfitD);
+fprintf('total-variation     = %.4f \n',tvD);
 fprintf('jaccard index       = %.4f \n',jacIdD);
 fprintf('Incorrect pixels    = %d \n',incIdD);
 fprintf('Undetermined pixels = %d \n',undetD);

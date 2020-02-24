@@ -46,7 +46,7 @@ A           = A/normest(A);             % rescale matrix
 bt          = A*xt(:);                  % generate (true) data              
 
 % add noise to data (additive white Gaussian noise)
-noiseLevel  = 0.0;
+noiseLevel  = 0.01;
 noiseB      = randn(size(bt));
 noiseB      = noiseLevel*(noiseB/norm(noiseB)*norm(bt));
 b           = bt + noiseB;
@@ -70,7 +70,7 @@ xP(xP>0) = 1;
 xP       = reshape(xP,n,n);
 
 % performance measures
-misfitP  = norm(A*xP(:)-b);
+misfitP  = 0.5*norm(A*xP(:)-b)^2;
 jacIdP   = nnz(xP(:)==xt(:))/nnz(xt(:));
 incIdP   = nnz(min(xP(:).*xt(:),0));
 
@@ -87,9 +87,9 @@ fprintf('Incorrect pixels = %d \n',incIdP);
 
 fprintf('------------- Dual solution ------------- \n')
 
-options.maxIter = 1e7; 
-options.optTol  = 1e-9; 
-options.progTol = 1e-9; 
+options.maxIter = 1e6; 
+options.optTol  = 1e-8; 
+options.progTol = 1e-8; 
 options.savehist= 0;    
 
 [xD,hist]       = solveBT(A,b,options);
@@ -101,7 +101,7 @@ xDt = sign(xDt);
 xDt = reshape(xDt,n,n);
 
 % performance measures
-misfitD = norm(A*xDt(:)-b);
+misfitD = 0.5*norm(A*xDt(:)-b)^2;
 jacIdD  = nnz(xDt(:)==xt(:))/nnz(xt(:));
 incIdD  = nnz(min(xDt(:).*xt(:),0));
 undetD  = nnz(xDt(:)==0);

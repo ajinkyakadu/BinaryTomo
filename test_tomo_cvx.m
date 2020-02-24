@@ -1,13 +1,15 @@
 % Tomography test (with CVX package)
+% intended for small-scale problems
 %
 % 2D Tomgoraphy example
-%   min_{x} \| A*x - b \|^2 subject to x \in \{-1, 1\}^n
+%   min_{x} | A*x - b |_2^2 subject to x \in {-1, 1}^n
 %   
 % b - projected data
 % A - tomography matrix
 % x - (binary) image
 %
-% Note: CVX must be installed!
+% Note: - CVX must be installed!
+%       - If Gurobi is not installed, use sdpt3 solver instead.
 %
 % Created by:
 %   - Ajinkya Kadu, Utrecht University
@@ -79,7 +81,7 @@ xPt(xP<0) = -1;
 xPt(xP>0) = 1;
 xPt       = reshape(xPt,n,n);
 
-misfitP = norm(A*xPt(:)-b);
+misfitP = 0.5*norm(A*xPt(:)-b)^2;
 jacIdP  = sum(max(xPt(:).*xt(:),0))/nnz(xt(:));
 incIdP  = nnz(min(xPt(:).*Xint(:),0)) + nnz(xPt(Xint==0));
 
@@ -115,7 +117,7 @@ qt(abs(q) < 1e-10) = 0;   % thresholding of 1e-8
 xD = sign(qt);           % solution is signum function applied to dual variable
 xD = reshape(xD,n,n);
 
-misfitD = norm(A*xD(:)-b);
+misfitD = 0.5*norm(A*xD(:)-b)^2;
 jacIdD  = sum(max(xD(:).*xt(:),0))/nnz(xt(:));
 jacIdDi = sum(max(xD(:).*Xint(:),0))/nnz(Xint(:));
 incIdD  = nnz(min(xD(:).*Xint(:),0)) + nnz(xD(Xint==0));

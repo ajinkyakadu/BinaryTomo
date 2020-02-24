@@ -92,6 +92,8 @@ end
 
 xD = -u;
 
+hist.xD2 = -(K'*x);
+
 end
 
 function [y] = proxfd(x,gamma,m,b,sigma)
