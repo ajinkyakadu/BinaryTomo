@@ -1,7 +1,8 @@
 # BinaryTomo
 
-Reconstruction of Binary Images from their tomographic projections
+This MATLAB toolbox solves the reconstruction of binary images from their tomographic projections. The challenge with this reconstruction problem is that the number of tomographic projections are much smaller than the size of the image. By exploiting the binary nature of the image, it is possible to solve the problem. This framework is based on the convex programming approach and can scale up fairly easily for large-scale tomographic problems.
 
+## Problem description  
 The least-squares formulation of a binary tomography problem is
 
 ![equation](/extras/primal.jpg)
@@ -10,7 +11,7 @@ where **A** is a tomography matrix of size *m* times *n*, **b** is the tomograph
 
 ![equation](/extras/dual.jpg)
 
-This convex program is a Lagrangian dual of the main problem. The primal solution is retrieved from a dual solution using
+This convex program is a Lagrangian dual of the main problem. The binary image is retrieved from a dual solution using
 
 ![equation](/extras/relation.jpg)
 
@@ -18,6 +19,7 @@ This convex program is a Lagrangian dual of the main problem. The primal solutio
 
 ## Authors
 * Ajinkya Kadu ([a.a.kadu@uu.nl](mailto:a.a.kadu@uu.nl))  
+* Tristan van Leeuwen  
 Mathematical Institute, Utrecht University, The Netherlands
 
 ## License
@@ -30,9 +32,10 @@ This framework has been tested on Matlab 2019a.
 ## Usage  
 The examples scripts are  
 1. **test_tomo** : classic discrete tomography problem with no regularization.
-2. **test_tomo_cvx** : small-scale discrete tomography problem with dual problem solved using CVX toolbox.
-3. **test_tomo_TV** : Total-variation regularized discrete tomography problem
-4. **test_tomo_TVmin** : Minimum total-variation discrete solution to noisy tomography problem
+2. **test_tomo_gen** : discrete tomography problem with option for grey values to be other than -1 and 1.
+3. **test_tomo_cvx** : small-scale discrete tomography problem with dual problem solved using CVX toolbox.
+4. **test_tomo_TV** : Total-variation regularized discrete tomography problem
+5. **test_tomo_TVmin** : Minimum total-variation discrete solution to noisy tomography problem
 
 ![image](/results/rat.png)
 
