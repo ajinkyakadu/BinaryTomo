@@ -8,11 +8,11 @@ The least-squares formulation of a binary tomography problem is
 
 where **A** is a tomography matrix of size *m* times *n*, **b** is the tomographic data of size *m* times *1*, and **x** is a binary image that has grey levels 0 and 1. This problem is NP-hard to solve. We propose to solve the following convex program instead:
 
-![equation]()
+![equation](/extras/dual.jpg)
 
 This convex program is a Lagrangian dual of the main problem. The primal solution is retrieved from a dual solution using
 
-![equation](http://www.sciweavers.org/tex2img.php?eq=%5Cmathbf%7Bx%7D%20%3D%20%5Cmathrm%7Bsign%7D%28%5Cmathbf%7Bp%7D%29&bc=White&fc=Black&im=jpg&fs=12&ff=arev&edit=0)
+![equation](/extras/relation.jpg)
 
 
 
