@@ -34,6 +34,8 @@ The examples scripts are
 3. **test_tomo_TV** : Total-variation regularized discrete tomography problem
 4. **test_tomo_TVmin** : Minimum total-variation discrete solution to noisy tomography problem
 
+![image](/results/rat.png)
+
 ## Citation  
 If you use this code, please use the following citation
 ```

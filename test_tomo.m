@@ -22,11 +22,11 @@ addpath(genpath([pwd '/bin']));
 
 fprintf('------------- Setting up ---------------- \n')
 
-I  = imread([pwd '/images/apple.png']); 
+I  = imread([pwd '/images/bat.png']); 
 I  = double(I);             % convert image to double
 I  = I/max(I(:));           % rescale
 
-k  = 2;                     % sampling
+k  = 1;                     % sampling
 I  = I(1:k:end,1:k:end);    
 
 % convert image to pixel values of -1 and 1
