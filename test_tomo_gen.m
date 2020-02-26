@@ -23,11 +23,11 @@ addpath(genpath([pwd '/bin']));
 
 fprintf('------------- Setting up ---------------- \n')
 
-I  = imread([pwd '/images/hat.png']); 
+I  = imread([pwd '/images/octopus.png']); 
 I  = double(I);             % convert image to double
 I  = I/max(I(:));           % rescale
 
-k  = 2;                     % sampling
+k  = 4;                     % sampling
 I  = I(1:k:end,1:k:end);    
 
 % convert image to pixel values of u0,u1
@@ -46,7 +46,7 @@ u           = unique(xt(:));            % unique greylevels
 
 
 % generate a tomography matrix 
-theta       = round(linspace(0,150,6)); % angles (in degrees)
+theta       = round(linspace(0,150,8)); % angles (in degrees)
 A           = paralleltomo(n,theta);    % parallel-beam geometry
 A           = A/normest(A);             % rescale matrix
 
@@ -106,9 +106,9 @@ options.savehist= 0;
 
 % threshold
 xDt = xD;
-xDt(xD<1.01*u0) = u0;
-xDt(xD>0.99*u1) = u1;
-xDid = find((abs(xD) > 1.01*u0) & (abs(xD)<0.99*u1));
+xDt(xD<=1.02*u0) = u0;
+xDt(xD>=0.98*u1) = u1;
+xDid = find((abs(xD) > 1.02*u0) & (abs(xD)<0.98*u1));
 xDt(xDid) = 0.5*(u0+u1); 
 % xDt = p1*sign(xDt) + p2;           
 xDt = reshape(xDt,n,n);
