@@ -1,6 +1,8 @@
 # BinaryTomo
 
-<img src="/extras/BT.gif" width="200">
+<p align="right">
+<img align="right" width="200" height="200" src="/extras/BT.gif" >
+</p>
 
 This MATLAB toolbox solves the reconstruction of binary images from their tomographic projections. The challenge with this reconstruction problem is that the number of tomographic projections are much smaller than the size of the image. By exploiting the binary nature of the image, it is possible to solve the problem. This framework is based on the convex programming approach and can scale up fairly easily for large-scale tomographic problems.
 
