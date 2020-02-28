@@ -10,7 +10,7 @@ function [xD,hist] = solveTVminBT(A,b,D,sigma,options)
 %   D : a finite-difference matrix of size p x n
 %   sigma : noise level in the data
 %   options:
-%       maxIter : maximum number of iterations (default: 1e3)
+%       maxIter : maximum number of iterations (default: 1e4)
 %       optTol  : tolerance level for optimality (default: 1e-6)
 %       progTol : tolerance level for progress (default: 1e-6)
 %       saveHist: an indicator for saving history (default:0)
@@ -18,7 +18,7 @@ function [xD,hist] = solveTVminBT(A,b,D,sigma,options)
 % Output:
 %   xD : solution (size n x 1)
 %   hist - history containing values at each iteration
-%       f : function value 0.5|x-b|_2^2
+%       f : function value max(0.5*|x-b|^2-sigma,0) + max(|z|_1 -1,0)
 %       g : function value |A'*x+D'*z|_1
 %       cost : sum of two functions f and g
 %       er : progress of the iterates |[x;u;v]-[xp;up;vp|_2 
@@ -28,8 +28,11 @@ function [xD,hist] = solveTVminBT(A,b,D,sigma,options)
 % Created by:
 %   - Ajinkya Kadu, Utrecht University
 %   Feb 18, 2020
+if nargin < 5
+    options = [];
+end
 
-maxIter = getoptions(options,'maxIter',1000);
+maxIter = getoptions(options,'maxIter',1e4);
 optTol  = getoptions(options,'optTol',1e-6);
 progTol = getoptions(options,'progTol',1e-6);
 saveHist= getoptions(options,'saveHist',0);
@@ -92,7 +95,9 @@ end
 
 xD = -u;
 
-hist.xD2 = -(K'*x);
+fprintf('completed iterations %d \n',k);
+fprintf('Optimality: %d \n',hist.opt(k));
+fprintf('relative progress: %d \n',hist.er(k));
 
 end
 

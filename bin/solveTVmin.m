@@ -9,7 +9,7 @@ function [xTV,hist] = solveTVmin(A,b,D,sigma,options)
 %   D : a finite-difference matrix of size p x n
 %   sigma : regularization parameter for TV
 %   options:
-%       maxIter : maximum number of iterations (default: 1e3)
+%       maxIter : maximum number of iterations (default: 1e4)
 %       OptTol  : tolerance level for optimality (default: 1e-6)
 %       ProgTol : tolerance level for progress (default: 1e-6)
 %       saveHist: an indicator for saving history (default:0)
@@ -17,17 +17,22 @@ function [xTV,hist] = solveTVmin(A,b,D,sigma,options)
 % Output:
 %   xTV : solution (size n x 1)
 %   hist - history containing values at each iteration
-%       f : function value 0.5|A*x-b|_2^2
-%       g : function value lambda*|D*x|_1
+%       f : function value max(0.5*norm(A*x-b)^2-sigma,0)
+%       g : function value |D*x|_1
 %       cost : sum of two functions f and g
-%       er : error value |[x;u]-[xprev;uprev]|_2
+%       er : progress value |[x;u;v]-[xp;up;vp]|_2
+%       opt : optimality value |(A'*v) + (D'*u)|_2
 % 
 %
 % Created by:
 %   - Ajinkya Kadu, Utrecht University
 %   Feb 18, 2020
 
-maxIter = getoptions(options,'maxIter',1e3);
+if nargin < 5
+    options = [];
+end
+
+maxIter = getoptions(options,'maxIter',1e4);
 optTol  = getoptions(options,'optTol',1e-6);
 progTol = getoptions(options,'progTol',1e-6);
 saveHist= getoptions(options,'saveHist',0);
@@ -83,6 +88,10 @@ for k=1:maxIter
     end
     
 end
+
+fprintf('completed iterations %d \n',k);
+fprintf('Optimality: %d \n',hist.opt(k));
+fprintf('relative progress: %d \n',hist.er(k));
 
 xTV = x;
 

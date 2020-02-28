@@ -9,7 +9,7 @@ function [xTV,hist] = solveTV(A,b,D,lambda,options)
 %   D : a finite-difference matrix of size p x n
 %   lambda : regularization parameter for TV
 %   options:
-%       maxIter : maximum number of iterations (default: 1e3)
+%       maxIter : maximum number of iterations (default: 1e4)
 %       optTol  : tolerance level for optimality (default: 1e-6)
 %       progTol : tolerance level for progress (default: 1e-6)
 %       saveHist: an indicator for saving history (default:0)
@@ -20,7 +20,7 @@ function [xTV,hist] = solveTV(A,b,D,lambda,options)
 %       f    : function value 0.5|A*x-b|_2^2
 %       g    : function value lambda*|D*x|_1
 %       cost : sum of two functions f and g
-%       er   : error value |[x;u]-[xprev;uprev]|_2
+%       er   : error value |[x;u]-[xp;up]|_2
 %       opt  : optimality value |A'*(A*x-b)+lambda*(D'*u)|_2
 % 
 %
@@ -28,7 +28,11 @@ function [xTV,hist] = solveTV(A,b,D,lambda,options)
 %   - Ajinkya Kadu, Utrecht University
 %   Feb 18, 2020
 
-maxIter = getoptions(options,'maxIter',1e3);
+if nargin < 5
+    options = [];
+end
+
+maxIter = getoptions(options,'maxIter',1e4);
 optTol  = getoptions(options,'optTol',1e-6);
 progTol = getoptions(options,'progTol',1e-6);
 saveHist= getoptions(options,'saveHist',0);
@@ -47,7 +51,7 @@ for k=1:maxIter
     
     % update primal variable x
     xp = x;
-    x  = proxf(xp-gamma*(D'*u),gamma,b,A);
+    x  = proxf(xp-gamma*(D'*u),gamma,A,b);
     
     % update dual variable u
     up = u;
@@ -81,11 +85,15 @@ for k=1:maxIter
     
 end
 
+fprintf('completed iterations %d \n',k);
+fprintf('Optimality: %d \n',hist.opt(k));
+fprintf('relative progress: %d \n',hist.er(k));
+
 xTV = x;
 
 end
 
-function [y] = proxf(x,gamma,b,A)
+function [y] = proxf(x,gamma,A,b)
 % (inexact) proximal for f(x) = |A*x - b|^2
 
 g = A'*(A*x-b);

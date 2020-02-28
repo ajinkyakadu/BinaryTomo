@@ -1,7 +1,7 @@
 function [xD,hist] = solveGenBT(A,b,ug,options)
 %solveBT A primal-dual algorithm to find a solution to
 %
-%   min_{x} 0.5*\|x - b\|_2^2 + p1*\|A'*x\|_1 + p2*sum(A'*x)
+%   min_{x} 0.5*|x - b|_2^2 + p1*|A'*x|_1 + p2*sum(A'*x)
 %
 %  where p1 = (u1 - u0)/2 and p2 = (u1 + u0)/2
 % Input:
@@ -20,12 +20,17 @@ function [xD,hist] = solveGenBT(A,b,ug,options)
 %       f : function value 0.5|x-b|_2^2
 %       g : function value |A'*x|_1
 %       cost : sum of two functions f and g
-%       er : error value |x-xprev|_2 + |u - uprev|_2
+%       er : error value |[x;u]-[xp;up]|_2
+%       opt : optimality |x - b + A*u|_2
 % 
 %
 % Created by:
 %   - Ajinkya Kadu, Utrecht University
 %   Feb 18, 2020
+
+if nargin < 4
+    options = [];
+end
 
 maxIter = getoptions(options,'maxIter',1000);
 optTol  = getoptions(options,'optTol',1e-6);
@@ -80,6 +85,10 @@ for k=1:maxIter
     end
     
 end
+
+fprintf('completed iterations %d \n',k);
+fprintf('Optimality: %d \n',hist.opt(k));
+fprintf('relative progress: %d \n',hist.er(k));
 
 xD = u;
 

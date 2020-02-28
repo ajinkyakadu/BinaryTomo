@@ -10,7 +10,7 @@ function [xD,hist] = solveTVBT(A,b,D,lambda,options)
 %   D : a finite-difference matrix of size p x n
 %   lambda : regularization parameter for TV
 %   options:
-%       maxIter : maximum number of iterations (default: 1e3)
+%       maxIter : maximum number of iterations (default: 1e4)
 %       optTol  : tolerance level for optimality (default: 1e-6)
 %       progTol : tolerance level for progress (default: 1e-6)
 %       saveHist: an indicator for saving history (default:0)
@@ -21,14 +21,19 @@ function [xD,hist] = solveTVBT(A,b,D,lambda,options)
 %       f : function value 0.5|x-b|_2^2
 %       g : function value |A'*x|_1
 %       cost : sum of two functions f and g
-%       er : error value |x-xprev|_2 + |u - uprev|_2
+%       er : error value |[x;u;v]-[xp;up;vp]|_2
+%       opt : optimality value |[x;0]+v+K*u|_2
 % 
 %
 % Created by:
 %   - Ajinkya Kadu, Utrecht University
 %   Feb 18, 2020
 
-maxIter = getoptions(options,'maxIter',1000);
+if nargin < 5
+    options = [];
+end
+
+maxIter = getoptions(options,'maxIter',1e4);
 optTol  = getoptions(options,'optTol',1e-6);
 progTol = getoptions(options,'progTol',1e-6);
 saveHist= getoptions(options,'saveHist',0);
@@ -63,15 +68,16 @@ for k=1:maxIter
     up = u;
     u  = proxgd(up-gamma*(K'*dx),gamma);
     
+    % history
+    hist.er(k)   = norm([x;u;v]-[xp;up;vp]);
+    hist.opt(k)  = norm([x(1:m)+b;0*x(m+1:end)]+v+K*u);
+    
     if saveHist
         Ktx          = K'*x;
         hist.f(k)    = 0.5*norm(x(1:m)-b)^2;
         hist.g(k)    = norm(Ktx,1);
         hist.cost(k) = hist.f(k) + hist.g(k);
     end
-    
-    hist.er(k)   = norm([x;u;v]-[xp;up;vp]);
-    hist.opt(k)  = norm([x(1:m)+b;0*x(m+1:end)]+v+K*u);
     
     if hist.er(k) < progTol
         fprintf('stopped at iteration %d \n',k);
@@ -89,6 +95,10 @@ for k=1:maxIter
     
 end
 
+fprintf('completed iterations %d \n',k);
+fprintf('Optimality: %d \n',hist.opt(k));
+fprintf('relative progress: %d \n',hist.er(k));
+
 xD = -u;
 
 end
@@ -105,21 +115,6 @@ function [y] = proxhd(x,gamma,lambda)
 
 t = gamma*lambda;
 y = max(0, x - t) - max(0, -x - t);
-
-end
-
-function [y] = proxfh(x,b,lambda,n,gamma)
-% proximal for f(x) = |x - b|^2 and h(x) = \indicator{|x|_inf <= lambda}
-
-x1 = x(1:n);
-y1 = (x1 + gamma*b)/(1+gamma);
-
-x2 = x(n+1:end);
-y2 = x2;
-y2(x2>lambda) = lambda;
-y2(x2<-lambda)= -lambda;
-
-y  = [y1;y2]; 
 
 end
 

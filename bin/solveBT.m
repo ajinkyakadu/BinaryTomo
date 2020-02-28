@@ -1,13 +1,13 @@
 function [xD,hist] = solveBT(A,b,options)
 %solveBT A primal-dual algorithm to find a solution to
 %
-%   min_{x} 0.5*\|x - b\|_2^2 + \|A'*x\|_1
+%   min_{x} 0.5*|x - b|_2^2 + |A'*x|_1
 %
 % Input:
 %   A : a (tomography) matrix of size m x n
 %   b : (tomographic) projection data vector of size m x 1
 %   options:
-%       maxIter : maximum number of iterations (default: 1e3)
+%       maxIter : maximum number of iterations (default: 1e4)
 %       optTol  : tolerance level for optimality (default: 1e-6)
 %       progTol : tolerance level for progress (default: 1e-6)
 %       saveHist: an indicator for saving history (default:0)
@@ -18,14 +18,19 @@ function [xD,hist] = solveBT(A,b,options)
 %       f : function value 0.5|x-b|_2^2
 %       g : function value |A'*x|_1
 %       cost : sum of two functions f and g
-%       er : error value |x-xprev|_2 + |u - uprev|_2
+%       er : error value |[x;u]-[xp;up]|_2
+%       opt : |x-b+A*u|_2
 % 
 %
 % Created by:
 %   - Ajinkya Kadu, Utrecht University
 %   Feb 18, 2020
 
-maxIter = getoptions(options,'maxIter',1000);
+if nargin < 3
+    options = [];
+end
+
+maxIter = getoptions(options,'maxIter',1e4);
 optTol  = getoptions(options,'optTol',1e-6);
 progTol = getoptions(options,'progTol',1e-6);
 saveHist= getoptions(options,'saveHist',0);
@@ -43,7 +48,7 @@ for k=1:maxIter
     
     % update primal variable (x)
     xp = x;
-    x = proxf(xp-gamma*(A*u),b,gamma);
+    x = proxf(xp-gamma*(A*u),gamma,b);
     
     % update dual variable (u)
     up = u;
@@ -78,11 +83,15 @@ for k=1:maxIter
     
 end
 
+fprintf('completed iterations %d \n',k);
+fprintf('Optimality: %d \n',hist.opt(k));
+fprintf('relative progress: %d \n',hist.er(k));
+
 xD = u;
 
 end
 
-function [y] = proxf(x,b,gamma)
+function [y] = proxf(x,gamma,b)
 % proximal for f(x) = 0.5*|x - b|^2
 
 y = (x + gamma*b)/(1+gamma);
