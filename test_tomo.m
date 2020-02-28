@@ -26,7 +26,7 @@ I  = imread([pwd '/images/bat.png']);
 I  = double(I);             % convert image to double
 I  = I/max(I(:));           % rescale
 
-k  = 8;                     % sampling
+k  = 1;                     % sampling
 I  = I(1:k:end,1:k:end);    
 
 % convert image to pixel values of -1 and 1
@@ -117,15 +117,15 @@ figure; subplot(1,2,1);semilogy(hist.opt);title('optimality')
 subplot(1,2,2);semilogy(hist.er);title('error')
 
 fig1 = figure; 
-subplot(1,3,1); imagesc(xt,[-1 1]);axis image;
+subplot(1,2,1); imagesc(xt,[-1 1]);axis image;
 axis off; colormap gray; title('true');
-subplot(2,3,2); imagesc(xP,[-1 1]);axis image;
+subplot(2,4,3); imagesc(xP,[-1 1]);axis image;
 axis off; colormap gray; title('LSQR');
-subplot(2,3,3); imagesc(xDt,[-1 1]);axis image;
+subplot(2,4,4); imagesc(xDt,[-1 1]);axis image;
 axis off; colormap gray; title('Dual');
-subplot(2,3,5); imagesc(xP-xt,[-1 1]);axis image;
+subplot(2,4,7); imagesc(xP-xt,[-1 1]);axis image;
 axis off; colormap gray; title('incorrect pixels');
-subplot(2,3,6); imagesc(abs(xDt).*(xDt-xt),[-1 1]);axis image;
+subplot(2,4,8); imagesc(abs(xDt).*(xDt-xt),[-1 1]);axis image;
 axis off; colormap gray; title('incorrect pixels');
 
 
