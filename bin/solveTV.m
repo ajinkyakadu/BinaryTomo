@@ -20,8 +20,8 @@ function [xTV,hist] = solveTV(A,b,D,lambda,options)
 %       f    : function value 0.5|A*x-b|_2^2
 %       g    : function value lambda*|D*x|_1
 %       cost : sum of two functions f and g
-%       er   : error value |[x;u]-[xp;up]|_2
-%       opt  : optimality value |A'*(A*x-b)+lambda*(D'*u)|_2
+%       er   : iterates' progress, |[x;u]-[xp;up]|_2
+%       opt  : optimality, |A'*(A*x-b)+lambda*(D'*u)|_2
 % 
 %
 % Created by:
@@ -55,20 +55,19 @@ for k=1:maxIter
     
     % update dual variable u
     up = u;
-    dx = 2*x-xp;
-    u  = proxgd(up+gamma*(D*dx),gamma,lambda);
+    dx = xp-2*x;
+    u  = proxgd(up-gamma*(D*dx),gamma,lambda);
    
-        
+    % history
     hist.er(k)   = norm([x;u]-[xp;up]);
     hist.opt(k)  = norm(A'*(A*x-b)+lambda*(D'*u));
     if saveHist
-        Ax           = A*x;
-        Dx           = D*x;
-        hist.f(k)    = 0.5*norm(Ax-b)^2;
-        hist.g(k)    = lambda*norm(Dx,1);
+        hist.f(k)    = 0.5*norm(A*x-b)^2;
+        hist.g(k)    = lambda*norm(D*x,1);
         hist.cost(k) = hist.f(k) + hist.g(k);
     end
     
+    % optimality tolerance
     if (hist.opt(k) < optTol)
         fprintf('stopped at iteration %d \n',k);
         fprintf('Optimality: %d \n',hist.opt(k));
@@ -76,6 +75,7 @@ for k=1:maxIter
         break;
     end
     
+    % progress tolerance
     if (hist.er(k) < progTol)
         fprintf('stopped at iteration %d \n',k);
         fprintf('relative progress: %d \n',hist.er(k));
@@ -83,11 +83,15 @@ for k=1:maxIter
         break;
     end
     
+    if k==maxIter
+        fprintf('completed iterations %d \n',k);
+        fprintf('Optimality: %d \n',hist.opt(k));
+        fprintf('relative progress: %d \n',hist.er(k));
+    end
+    
 end
 
-fprintf('completed iterations %d \n',k);
-fprintf('Optimality: %d \n',hist.opt(k));
-fprintf('relative progress: %d \n',hist.er(k));
+
 
 xTV = x;
 

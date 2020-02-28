@@ -21,8 +21,8 @@ function [xD,hist] = solveTVBT(A,b,D,lambda,options)
 %       f : function value 0.5|x-b|_2^2
 %       g : function value |A'*x|_1
 %       cost : sum of two functions f and g
-%       er : error value |[x;u;v]-[xp;up;vp]|_2
-%       opt : optimality value |[x;0]+v+K*u|_2
+%       er : iterates' progress, |[x;u;v]-[xp;up;vp]|_2
+%       opt : optimality, |[x;0]+v+K*u|_2
 % 
 %
 % Created by:
@@ -71,14 +71,13 @@ for k=1:maxIter
     % history
     hist.er(k)   = norm([x;u;v]-[xp;up;vp]);
     hist.opt(k)  = norm([x(1:m)+b;0*x(m+1:end)]+v+K*u);
-    
     if saveHist
-        Ktx          = K'*x;
         hist.f(k)    = 0.5*norm(x(1:m)-b)^2;
-        hist.g(k)    = norm(Ktx,1);
+        hist.g(k)    = norm(K'*x,1);
         hist.cost(k) = hist.f(k) + hist.g(k);
     end
     
+    % progress tolerance
     if hist.er(k) < progTol
         fprintf('stopped at iteration %d \n',k);
         fprintf('relative progress: %d \n',hist.er(k));
@@ -86,6 +85,7 @@ for k=1:maxIter
         break;
     end
     
+    % optimality tolerance
     if hist.opt(k) < optTol
         fprintf('stopped at iteration %d \n',k);
         fprintf('Optimality: %d \n',hist.opt(k));
@@ -93,11 +93,13 @@ for k=1:maxIter
         break;
     end
     
+    if k==maxIter
+        fprintf('completed iterations %d \n',k);
+        fprintf('Optimality: %d \n',hist.opt(k));
+        fprintf('relative progress: %d \n',hist.er(k));
+    end
 end
 
-fprintf('completed iterations %d \n',k);
-fprintf('Optimality: %d \n',hist.opt(k));
-fprintf('relative progress: %d \n',hist.er(k));
 
 xD = -u;
 

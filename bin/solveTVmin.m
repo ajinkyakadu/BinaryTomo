@@ -20,8 +20,8 @@ function [xTV,hist] = solveTVmin(A,b,D,sigma,options)
 %       f : function value max(0.5*norm(A*x-b)^2-sigma,0)
 %       g : function value |D*x|_1
 %       cost : sum of two functions f and g
-%       er : progress value |[x;u;v]-[xp;up;vp]|_2
-%       opt : optimality value |(A'*v) + (D'*u)|_2
+%       er : progress value, |[x;u;v]-[xp;up;vp]|_2
+%       opt : optimality value, |(A'*v) + (D'*u)|_2
 % 
 %
 % Created by:
@@ -73,6 +73,7 @@ for k=1:maxIter
         hist.cost(k) = hist.f(k) + hist.g(k);
     end
     
+    % optimality
     if (hist.opt(k) < optTol)
         fprintf('stopped at iteration %d \n',k);
         fprintf('Optimality: %d \n',hist.opt(k));
@@ -80,6 +81,7 @@ for k=1:maxIter
         break;
     end
     
+    % progress
     if (hist.er(k) < progTol)
         fprintf('stopped at iteration %d \n',k);
         fprintf('relative progress: %d \n',hist.er(k));
@@ -87,11 +89,13 @@ for k=1:maxIter
         break;
     end
     
+    if k==maxIter
+        fprintf('completed iterations %d \n',k);
+        fprintf('Optimality: %d \n',hist.opt(k));
+        fprintf('relative progress: %d \n',hist.er(k));
+    end
+    
 end
-
-fprintf('completed iterations %d \n',k);
-fprintf('Optimality: %d \n',hist.opt(k));
-fprintf('relative progress: %d \n',hist.er(k));
 
 xTV = x;
 

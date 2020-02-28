@@ -37,7 +37,6 @@ optTol  = getoptions(options,'optTol',1e-6);
 progTol = getoptions(options,'progTol',1e-6);
 saveHist= getoptions(options,'saveHist',0);
 
-
 [m,n] = size(A);
 [p,n] = size(D);
 
@@ -52,7 +51,7 @@ gamma = 0.95/normest([K speye(m+p)]);
 
 for k=1:maxIter
     
-    % update primal variable x
+    % update primal variable (x)
     xp = x;
     x  = xp - gamma*(K*u+v);
     
@@ -66,17 +65,17 @@ for k=1:maxIter
     up = u;
     u  = proxgd(up - gamma*(K'*dx),gamma);
     
+    % history
+    hist.er(k)   = norm([x;u;v]-[xp;up;vp]);
+    hist.opt(k)  = norm(v+K*u);
     if saveHist
-        Ktx          = K'*x;
         hist.f(k)    = max(0.5*norm(x(1:m)-b)^2-sigma,0) ...
                         + max(norm(x(m+1:end),1)-1,0);
-        hist.g(k)    = norm(Ktx,1);
+        hist.g(k)    = norm(K'*x,1);
         hist.cost(k) = hist.f(k) + hist.g(k);
     end
     
-    hist.er(k)   = norm([x;u;v]-[xp;up;vp]);
-    hist.opt(k)  = norm(v+K*u);
-    
+    % progress
     if hist.er(k) < progTol
         fprintf('stopped at iteration %d \n',k);
         fprintf('relative progress: %d \n',hist.er(k));
@@ -84,6 +83,7 @@ for k=1:maxIter
         break;
     end
     
+    % optimality
     if hist.opt(k) < optTol
         fprintf('stopped at iteration %d \n',k);
         fprintf('Optimality: %d \n',hist.opt(k));
@@ -91,13 +91,17 @@ for k=1:maxIter
         break;
     end
     
+    if k==maxIter
+        fprintf('completed iterations %d \n',k);
+        fprintf('Optimality: %d \n',hist.opt(k));
+        fprintf('relative progress: %d \n',hist.er(k));
+    end
+    
 end
 
 xD = -u;
 
-fprintf('completed iterations %d \n',k);
-fprintf('Optimality: %d \n',hist.opt(k));
-fprintf('relative progress: %d \n',hist.er(k));
+
 
 end
 
