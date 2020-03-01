@@ -1,18 +1,17 @@
-% Generalized Tomography test (with given greylevels)
+% Tomography test
 %
 % 2D Tomgoraphy example
-%   min_{x} \| A*x - b \|^2 subject to x \in \{u_0, u_1\}^n
+%   min_{x} \| A*x - b \|^2 subject to x \in \{-1, 1\}^n
 %   
 % b - projected data
 % A - tomography matrix
 % x - (binary) image
-% u_0, u_1 - greylevels of the image
 %
 % Created by:
 %   - Ajinkya Kadu, Utrecht University
 %   Feb 18, 2020
 
-clc; clearvars; 
+clc; clearvars; close all;
 
 s = RandStream('mt19937ar','Seed',12);
 RandStream.setGlobalStream(s);
@@ -23,31 +22,26 @@ addpath(genpath([pwd '/bin']));
 
 fprintf('------------- Setting up ---------------- \n')
 
-I  = imread([pwd '/images/octopus.png']); 
+imName = 'pocket';
+I  = imread([pwd '/images/' imName '.png']); 
 I  = double(I);             % convert image to double
 I  = I/max(I(:));           % rescale
 
-k  = 2;                     % sampling
+k  = 1;                     % sampling
 I  = I(1:k:end,1:k:end);    
 
-% convert image to pixel values of u0,u1
-u0 = 0;
-u1 = 1;
-xt = I;
-xt(I<0.5) = u0;         
-xt(I>0.5) = u1;
-
-p1 = (u1-u0)/2;
-p2 = (u1+u0)/2;
-xtN= (xt-p2)/p1;
+% convert image to pixel values of -1 and 1
+xt          = I;
+xt(xt<0.5)  = -1;         
+xt(xt>0.5)  =  1;
 
 n           = size(xt,1);               % size of image
 u           = unique(xt(:));            % unique greylevels
 
 
 % generate a tomography matrix 
-theta       = round(linspace(0,150,8)); % angles (in degrees)
-A           = paralleltomo(n,theta);    % parallel-beam geometry
+theta       = round(linspace(0,150,18)); % angles (in degrees)
+A           = fancurvedtomo(n,theta);    % parallel-beam geometry
 A           = A/normest(A);             % rescale matrix
 
 bt          = A*xt(:);                  % generate (true) data              
@@ -64,6 +58,9 @@ fprintf('matrix A: m: %d, n: %d \n',size(A));
 fprintf(['angles = ' num2str(theta) '\n']);
 fprintf(['The noise is ' num2str(sigma) '\n']);
 
+s1 = sprintf('matrix A: %d x %d',size(A));
+s2 = sprintf(['angles = ' num2str(theta)]);
+s3 = sprintf(['The noise is ' num2str(sigma)]);
 %% LSQR solution
 % 
 
@@ -72,24 +69,24 @@ fprintf('----------- LSQR solution --------------- \n');
 xP = lsqr(A,b,1e-6,1e4);
 
 % threshold
-xPt      = xP;
-thr      = (u0+u1)/2;
-xPt(xP<thr) = u0;
-xPt(xP>thr) = u1;
+xPt      = 0*xP;
+xPt(xP<0)= -1;
+xPt(xP>0)= 1;
 xP       = reshape(xP,n,n);
 xPt      = reshape(xPt,n,n);
 
-xPN      = (xPt-p2)/p1;
-
 % performance measures
 misfitP  = 0.5*norm(A*xPt(:)-b)^2;
-jacIdP   = nnz(xPN(:)==xtN(:))/nnz(xtN(:));
-incIdP   = nnz(min(xPN(:).*xtN(:),0));
+jacIdP   = nnz(xPt(:)==xt(:))/nnz(xt(:));
+incIdP   = nnz(min(xPt(:).*xt(:),0));
 
 fprintf('misfit           = %.4f \n',misfitP);
 fprintf('jaccard index    = %.4f \n',jacIdP);
 fprintf('Incorrect pixels = %d \n',incIdP);
 
+sP1 = sprintf('misfit = %.4f',misfitP);
+sP2 = sprintf('jaccard index = %.4f',jacIdP);
+sP3 = sprintf('Incorrect pixels = %d',incIdP);
 
 %% dual - (first-order optimization method)
 % 
@@ -100,28 +97,28 @@ fprintf('Incorrect pixels = %d \n',incIdP);
 fprintf('------------- Dual solution ------------- \n')
 
 options.maxIter = 1e5; 
-options.optTol  = 1e-6; 
+options.optTol  = 1e-9; 
 options.progTol = 1e-6; 
 options.savehist= 0;    
 
-[xD,hist]       = solveGenBT(A,b,u,options);
+[xD,hist]       = solveBT(A,b,options);
 
 % threshold
 xDt = xD;
-xDt(xD<=1.02*u0) = u0;
-xDt(xD>=0.98*u1) = u1;
-xDid = find((abs(xD) > 1.02*u0) & (abs(xD)<0.98*u1));
-xDt(xDid) = 0.5*(u0+u1); 
-% xDt = p1*sign(xDt) + p2;           
+xDt(abs(xD) < 0.999) = 0;  
+xDt = sign(xDt);           
 xDt = reshape(xDt,n,n);
-
-xDtN= (xDt-p2)/p1;
 
 % performance measures
 misfitD = 0.5*norm(A*xDt(:)-b)^2;
-jacIdD  = nnz(xDtN(:)==xtN(:))/nnz(xtN(:));
-incIdD  = nnz(min(xDtN(:).*xtN(:),0));
-undetD  = nnz(xDtN(:)==0);
+jacIdD  = nnz(xDt(:)==xt(:))/nnz(xt(:));
+incIdD  = nnz(min(xDt(:).*xt(:),0));
+undetD  = nnz(xDt(:)==0);
+
+sD1 = sprintf('misfit = %.4f',misfitD);
+sD2 = sprintf('jaccard index = %.4f',jacIdD);
+sD3 = sprintf('Incorrect pixels = %d',incIdD);
+sD4 = sprintf('Undetermined pixels = %d',undetD);
 
 fprintf('misfit              = %.4f \n',misfitD);
 fprintf('jaccard index       = %.4f \n',jacIdD);
@@ -130,22 +127,30 @@ fprintf('Undetermined pixels = %d \n',undetD);
 
 %% compare
 
-figure;semilogy(hist.opt); hold on;semilogy(hist.er); hold off;
-xlabel('iterate');legend('optimality','progress');
+figure; subplot(1,2,1);semilogy(hist.opt);title('optimality')
+subplot(1,2,2);semilogy(hist.er);title('error')
 
 fig1 = figure; 
-subplot(1,4,1); imagesc(xt,[u0 u1]);axis image;
+set(fig1, 'Position',  [ 557, 170, 1212, 682])
+subplot(2,4,1); imagesc(xt,[-1 1]);axis image;
 axis off; colormap gray; title('true');
-subplot(2,4,2); imagesc(xP,[u0 u1]);axis image;
+subplot(2,4,5); text(0,0.75,sprintf('%s\n%s\n%s',s1,s2,s3));axis off;
+subplot(3,5,3); imagesc(xP,[-1 1]);axis image;
 axis off; colormap gray; title('LSQR');
-subplot(2,4,3); imagesc(xPt,[u0 u1]);axis image;
+subplot(3,5,4); imagesc(xPt,[-1 1]);axis image;
 axis off; colormap gray; title('(LSQR)_\tau');
-subplot(2,4,4); imagesc(xDt,[u0 u1]);axis image;
+subplot(3,5,5); imagesc(xDt,[-1 1]);axis image;
 axis off; colormap gray; title('Dual');
-subplot(2,4,7); imagesc(xPN-xtN,[-1 1]);axis image;
+subplot(3,5,8); imagesc(xP-xt,[-1 1]);axis image;
+axis off; colormap gray; title('difference');
+subplot(3,5,9); imagesc(xPt-xt,[-1 1]);axis image;
 axis off; colormap gray; title('incorrect pixels');
-subplot(2,4,8); imagesc(abs(xDtN).*(xDtN-xtN),[-1 1]);axis image;
+subplot(3,5,10); imagesc(abs(xDt).*(xDt-xt),[-1 1]);axis image;
 axis off; colormap gray; title('incorrect pixels');
+subplot(3,5,14); text(0,1,sprintf('%s\n%s\n%s',sP1,sP2,sP3));axis off;
+subplot(3,5,15); text(0,1,sprintf('%s\n%s\n%s\n%s',sD1,sD2,sD3,sD4));axis off;
+
+saveas(fig1,[pwd '/results/' imName],'png');
 
 
 

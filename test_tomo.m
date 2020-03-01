@@ -22,11 +22,11 @@ addpath(genpath([pwd '/bin']));
 
 fprintf('------------- Setting up ---------------- \n')
 
-I  = imread([pwd '/images/bat.png']); 
+I  = imread([pwd '/images/apple.png']); 
 I  = double(I);             % convert image to double
 I  = I/max(I(:));           % rescale
 
-k  = 1;                     % sampling
+k  = 4;                     % sampling
 I  = I(1:k:end,1:k:end);    
 
 % convert image to pixel values of -1 and 1
@@ -39,7 +39,7 @@ u           = unique(xt(:));            % unique greylevels
 
 
 % generate a tomography matrix 
-theta       = round(linspace(0,150,6)); % angles (in degrees)
+theta       = round(linspace(0,150,4)); % angles (in degrees)
 A           = paralleltomo(n,theta);    % parallel-beam geometry
 A           = A/normest(A);             % rescale matrix
 
@@ -65,14 +65,16 @@ fprintf('----------- LSQR solution --------------- \n');
 xP = lsqr(A,b,1e-6,1e4);
 
 % threshold
-xP(xP<0) = -1;
-xP(xP>0) = 1;
+xPt      = xP;
+xPt(xP<0)= -1;
+xPt(xP>0)= 1;
 xP       = reshape(xP,n,n);
+xPt      = reshape(xPt,n,n);
 
 % performance measures
-misfitP  = 0.5*norm(A*xP(:)-b)^2;
-jacIdP   = nnz(xP(:)==xt(:))/nnz(xt(:));
-incIdP   = nnz(min(xP(:).*xt(:),0));
+misfitP  = 0.5*norm(A*xPt(:)-b)^2;
+jacIdP   = nnz(xPt(:)==xt(:))/nnz(xt(:));
+incIdP   = nnz(min(xPt(:).*xt(:),0));
 
 fprintf('misfit           = %.4f \n',misfitP);
 fprintf('jaccard index    = %.4f \n',jacIdP);
@@ -88,9 +90,10 @@ fprintf('Incorrect pixels = %d \n',incIdP);
 fprintf('------------- Dual solution ------------- \n')
 
 options.maxIter = 1e6; 
-options.optTol  = 1e-8; 
-options.progTol = 1e-8; 
+options.optTol  = 1e-6; 
+options.progTol = 1e-6; 
 options.savehist= 0;    
+options.updateGamma = 1; 
 
 [xD,hist]       = solveBT(A,b,options);
 
@@ -113,17 +116,19 @@ fprintf('Undetermined pixels = %d \n',undetD);
 
 %% compare
 
-figure; subplot(1,2,1);semilogy(hist.opt);title('optimality')
-subplot(1,2,2);semilogy(hist.er);title('error')
+figure;semilogy(hist.opt); hold on;semilogy(hist.er); hold off;
+xlabel('iterate');legend('optimality','progress');
 
 fig1 = figure; 
-subplot(1,2,1); imagesc(xt,[-1 1]);axis image;
+subplot(1,4,1); imagesc(xt,[-1 1]);axis image;
 axis off; colormap gray; title('true');
-subplot(2,4,3); imagesc(xP,[-1 1]);axis image;
+subplot(2,4,2); imagesc(xP,[-1 1]);axis image;
 axis off; colormap gray; title('LSQR');
+subplot(2,4,3); imagesc(xPt,[-1 1]);axis image;
+axis off; colormap gray; title('(LSQR)_\tau');
 subplot(2,4,4); imagesc(xDt,[-1 1]);axis image;
 axis off; colormap gray; title('Dual');
-subplot(2,4,7); imagesc(xP-xt,[-1 1]);axis image;
+subplot(2,4,7); imagesc(xPt-xt,[-1 1]);axis image;
 axis off; colormap gray; title('incorrect pixels');
 subplot(2,4,8); imagesc(abs(xDt).*(xDt-xt),[-1 1]);axis image;
 axis off; colormap gray; title('incorrect pixels');

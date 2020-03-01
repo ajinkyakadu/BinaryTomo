@@ -101,7 +101,7 @@ incIdP   = nnz(min(xTVt(:).*xt(:),0));
 
 fprintf('misfit           = %.4f \n',misfitP);
 fprintf('total-variation  = %.4f \n',tvP);
-fprintf('jaccard index    = %.2f \n',jacIdP);
+fprintf('jaccard index    = %.4f \n',jacIdP);
 fprintf('Incorrect pixels = %d \n',incIdP);
 
 
@@ -139,7 +139,7 @@ undetD  = nnz(xDt(:)==0);
 
 fprintf('misfit              = %.4f \n',misfitD);
 fprintf('total-variation     = %.4f \n',tvD);
-fprintf('jaccard index       = %.2f \n',jacIdD);
+fprintf('jaccard index       = %.4f \n',jacIdD);
 fprintf('Incorrect pixels    = %d \n',incIdD);
 fprintf('Undetermined pixels = %d \n',undetD);
 

@@ -45,18 +45,20 @@ u = zeros(n,1);
 
 
 gamma = 0.95/normest(A);
+g1    = gamma;
+g2    = gamma;
 %%
 
 for k=1:maxIter
     
     % update primal variable (x)
     xp = x;
-    x = proxf(xp-gamma*(A*u),b,gamma);
+    x = proxf(xp-g1*(A*u),g1,b);
     
     % update dual variable (u)
     up = u;
     dx = xp-2*x;
-    u  = proxgd(up-gamma*(A'*dx),gamma,ug(1),ug(2));
+    u  = proxgd(up-g2*(A'*dx),g2,ug(1),ug(2));
     
     
     % history
@@ -67,6 +69,13 @@ for k=1:maxIter
         hist.g(k)    = norm(A'*x,1);
         hist.cost(k) = hist.f(k) + hist.g(k);
     end
+    
+    % update gamma
+    Au = A*u;
+    xAu= x'*(Au);
+    g1 = xAu/norm(Au)^2;
+    g2 = xAu/norm(A'*x)^2;
+
     
     % optimality tolerance
     if (hist.opt(k) < optTol)
@@ -96,7 +105,7 @@ xD = u;
 
 end
 
-function [y] = proxf(x,b,gamma)
+function [y] = proxf(x,gamma,b)
 % proximal for f(x) = 0.5*|x - b|^2
 
 y = (x + gamma*b)/(1+gamma);

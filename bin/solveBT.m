@@ -34,6 +34,7 @@ maxIter = getoptions(options,'maxIter',1e4);
 optTol  = getoptions(options,'optTol',1e-6);
 progTol = getoptions(options,'progTol',1e-6);
 saveHist= getoptions(options,'saveHist',0);
+updateG = getoptions(options,'updateGamma',1);
 
 
 [m,n] = size(A);
@@ -41,19 +42,23 @@ saveHist= getoptions(options,'saveHist',0);
 x = zeros(m,1);
 u = zeros(n,1);
 
-gamma = 0.95/normest(A);
+gamma = 0.99/normest(A);
+g1    = gamma;
+g2    = gamma;
+
 %%
 
 for k=1:maxIter
     
     % update primal variable (x)
     xp = x;
-    x = proxf(xp-gamma*(A*u),gamma,b);
+    x  = proxf(xp-g1*(A*u),g1,b);
+    
     
     % update dual variable (u)
-    up = u;
     dx = xp-2*x;
-    u  = proxgd(up-gamma*(A'*dx),gamma);
+    up = u;
+    u = proxgd(up-g2*(A'*dx),g2);
     
     
     % history
@@ -63,6 +68,16 @@ for k=1:maxIter
         hist.f(k)    = 0.5*norm(x-b)^2;
         hist.g(k)    = norm(A'*x,1);
         hist.cost(k) = hist.f(k) + hist.g(k);
+    end
+    
+    % update gamma
+    if updateG
+        Au = A*u;
+        xAu= x'*(Au);
+        normAu = norm(Au)^2;
+        normAx = norm(A'*x)^2;
+        if normAu > 0, g1 = xAu/normAu; end
+        if normAx > 0, g2 = xAu/normAx; end
     end
     
     % optimality tolerance
