@@ -22,12 +22,12 @@ addpath(genpath([pwd '/bin']));
 
 fprintf('------------- Setting up ---------------- \n')
 
-imName = 'pocket';
+imName = 'butterfly';
 I  = imread([pwd '/images/' imName '.png']); 
 I  = double(I);             % convert image to double
 I  = I/max(I(:));           % rescale
 
-k  = 1;                     % sampling
+k  = 4;                     % sampling
 I  = I(1:k:end,1:k:end);    
 
 % convert image to pixel values of -1 and 1
@@ -40,7 +40,7 @@ u           = unique(xt(:));            % unique greylevels
 
 
 % generate a tomography matrix 
-theta       = round(linspace(0,150,18)); % angles (in degrees)
+theta       = round(linspace(0,120,6)); % angles (in degrees)
 A           = fancurvedtomo(n,theta);    % parallel-beam geometry
 A           = A/normest(A);             % rescale matrix
 
@@ -96,9 +96,9 @@ sP3 = sprintf('Incorrect pixels = %d',incIdP);
 
 fprintf('------------- Dual solution ------------- \n')
 
-options.maxIter = 1e5; 
-options.optTol  = 1e-9; 
-options.progTol = 1e-6; 
+options.maxIter = 1e6; 
+options.optTol  = 1e-6; 
+options.progTol = 1e-10; 
 options.savehist= 0;    
 
 [xD,hist]       = solveBT(A,b,options);
@@ -127,8 +127,8 @@ fprintf('Undetermined pixels = %d \n',undetD);
 
 %% compare
 
-figure; subplot(1,2,1);semilogy(hist.opt);title('optimality')
-subplot(1,2,2);semilogy(hist.er);title('error')
+figure;semilogy(hist.opt); hold on;semilogy(hist.er); hold off;
+xlabel('iterate');legend('optimality','progress');
 
 fig1 = figure; 
 set(fig1, 'Position',  [ 557, 170, 1212, 682])
@@ -150,7 +150,7 @@ axis off; colormap gray; title('incorrect pixels');
 subplot(3,5,14); text(0,1,sprintf('%s\n%s\n%s',sP1,sP2,sP3));axis off;
 subplot(3,5,15); text(0,1,sprintf('%s\n%s\n%s\n%s',sD1,sD2,sD3,sD4));axis off;
 
-saveas(fig1,[pwd '/results/' imName],'png');
+% saveas(fig1,[pwd '/results/' imName],'png');
 
 
 

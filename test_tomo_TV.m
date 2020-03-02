@@ -80,7 +80,7 @@ fprintf('true total-variation = %.4f \n',trueTV);
 
 fprintf('------------ TV solution ---------------- \n');
 
-options.maxIter = 1e6;
+options.maxIter = 1e5;
 options.optTol  = 1e-6;
 options.progTol = 1e-6;
 options.saveHist= 0;
@@ -91,6 +91,7 @@ options.saveHist= 0;
 xTVt        = xTV;
 xTVt(xTV<0) = -1;
 xTVt(xTV>0) = 1;
+xTV         = reshape(xTV,n,n);
 xTVt        = reshape(xTVt,n,n);
 
 % performance measures
@@ -118,8 +119,8 @@ fprintf('Incorrect pixels = %d \n',incIdP);
 fprintf('----------- Dual-TV solution ------------ \n')
 
 options.maxIter = 1e6; 
-options.optTol  = 1e-9; 
-options.progTol = 1e-9; 
+options.optTol  = 1e-6; 
+options.progTol = 1e-6; 
 options.savehist= 0;    
 
 [xD,hist]     = solveTVBT(A,b,D,lambda,options);
@@ -145,22 +146,23 @@ fprintf('Undetermined pixels = %d \n',undetD);
 
 %% compare
 
-figure; subplot(1,2,1); semilogy(histTV.opt); title('optimality - TV');
-subplot(1,2,2); semilogy(histTV.er); title('error - TV');
-
-figure; subplot(1,2,1); semilogy(hist.opt); title('optimality - TVDual');
-subplot(1,2,2); semilogy(hist.er); title('error - TVDual');
+figure; subplot(1,2,1); semilogy(histTV.opt); hold on; semilogy(histTV.er);
+legend('optimality','progress'); title('TV');
+subplot(1,2,2); semilogy(hist.opt); hold on; semilogy(hist.er);
+legend('optimality','progress'); title('TVDual');
 
 figure; 
-subplot(2,3,1); imagesc(xt,[-1 1]);axis image;
+subplot(1,4,1); imagesc(xt,[-1 1]);axis image;
 axis off; colormap gray; title('true');
-subplot(3,3,2); imagesc(xTVt,[-1 1]);axis image;
+subplot(2,4,2); imagesc(xTV,[-1 1]);axis image;
 axis off; colormap gray; title('TV');
-subplot(3,3,3); imagesc(xDt,[-1 1]);axis image;
+subplot(2,4,3); imagesc(xTVt,[-1 1]);axis image;
+axis off; colormap gray; title('(TV)_\tau');
+subplot(2,4,4); imagesc(xDt,[-1 1]);axis image;
 axis off; colormap gray; title('Dual-TV');
-subplot(3,3,5); imagesc(xTVt-xt,[-1 1]);axis image;
-axis off; colormap gray; title('TV - error');
-subplot(3,3,6); imagesc(abs(xDt).*(xDt-xt),[-1 1]);axis image;
-axis off; colormap gray; title('Dual-TV - error');
+subplot(2,4,7); imagesc(xTVt-xt,[-1 1]);axis image;
+axis off; colormap gray; title('incorrect pixels');
+subplot(2,4,8); imagesc(abs(xDt).*(xDt-xt),[-1 1]);axis image;
+axis off; colormap gray; title('incorrect pixels');
 
 

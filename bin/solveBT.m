@@ -97,7 +97,7 @@ for k=1:maxIter
     end
     
     if k==maxIter
-        fprintf('completed iterations %d \n',k);
+        fprintf('completed iterations %d. did not converge yet. \n',k);
         fprintf('Optimality: %d \n',hist.opt(k));
         fprintf('relative progress: %d \n',hist.er(k));
     end
